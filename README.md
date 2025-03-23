@@ -1,66 +1,454 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Tin Refinery ERP System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+[![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.x-green.svg)](https://vuejs.org)
+[![PHP](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://php.net)
 
-## About Laravel
+A comprehensive Enterprise Resource Planning (ERP) system for tin refinery operations, built with Laravel and Vue.js.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Key Features](#key-features)
+- [Setup Instructions](#setup-instructions)
+- [Development Workflow](#development-workflow)
+- [API Documentation](#api-documentation)
+- [Database Schema](#database-schema)
+- [Deployment Guide](#deployment-guide)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
+- [License](#license)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Project Overview
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+This system manages the entire tin refinery process, including:
+- Batch management
+- Process tracking
+- Inventory management
+- Yield calculations
+- Sn content tracking
+- User authentication and authorization
 
-## Learning Laravel
+## Tech Stack
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Backend
+- PHP 8.2+
+- Laravel 12.x
+- MySQL/PostgreSQL
+- Laravel Sanctum (API Authentication)
+- Inertia.js (Server-side rendering)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### Frontend
+- Vue.js 3.x
+- Inertia.js
+- TailwindCSS
+- HeadlessUI
+- Vite
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Project Structure
 
-## Laravel Sponsors
+```plaintext
+tin-refinery-laravel/
+├── app/
+│   ├── Domain/                 # Domain-Driven Design structure
+│   │   ├── Batch/             # Batch management domain
+│   │   │   ├── Models/        # Batch-related models
+│   │   │   ├── Services/      # Batch business logic
+│   │   │   └── Providers/     # Service providers
+│   │   ├── Process/           # Process management domain
+│   │   │   ├── Models/        # Process-related models
+│   │   │   ├── Services/      # Process business logic
+│   │   │   └── Providers/     # Service providers
+│   │   └── Inventory/         # Inventory management domain
+│   │       ├── Models/        # Inventory-related models
+│   │       ├── Services/      # Inventory business logic
+│   │       └── Providers/     # Service providers
+│   ├── Http/
+│   │   ├── Controllers/       # HTTP Controllers
+│   │   └── Middleware/        # HTTP Middleware
+│   └── Providers/             # Service Providers
+├── resources/
+│   ├── js/
+│   │   ├── Components/        # Vue Components
+│   │   │   ├── BatchForm.vue  # Batch form component
+│   │   │   └── DecimalInput.vue # Custom numeric input
+│   │   ├── Pages/            # Inertia Pages
+│   │   └── types/            # TypeScript types
+│   └── views/                # Blade templates
+├── routes/
+│   ├── api.php               # API routes
+│   ├── web.php               # Web routes
+│   └── auth.php              # Authentication routes
+└── database/
+    ├── migrations/           # Database migrations
+    ├── seeders/             # Database seeders
+    └── factories/           # Model factories
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Key Features
 
-### Premium Partners
+### Batch Management
+- Create and manage production batches
+- Track batch status and progress
+- Generate unique batch numbers
+- Associate processes with batches
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### Process Management
+- Track different processing types (Kaldo Furnace, Refining Kettle)
+- Record input and output quantities
+- Calculate Sn content percentages
+- Track yield and recovery rates
+
+### Inventory Management
+- Track tin and slag inventory
+- Monitor Sn content in inventory items
+- Record inventory transactions
+- Manage stock levels
+
+## Setup Instructions
+
+### Prerequisites
+- PHP 8.2 or higher
+- Composer
+- Node.js 16+ and npm
+- MySQL 8.0+ or PostgreSQL 13+
+- Git
+
+### Installation Steps
+
+1. Clone the repository:
+```bash
+git clone [repository-url]
+cd tin-refinery-laravel
+```
+
+2. Install PHP dependencies:
+```bash
+composer install
+```
+
+3. Install Node.js dependencies:
+```bash
+npm install
+```
+
+4. Set up environment variables:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+5. Configure your database in `.env`:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=tin_refinery
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+```
+
+6. Run migrations and seeders:
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+7. Start the development server:
+```bash
+# Using Laravel Sail (recommended)
+./vendor/bin/sail up
+
+# Or using artisan
+php artisan serve
+npm run dev
+```
+
+## Development Workflow
+
+### Running Tests
+```bash
+# Run all tests
+php artisan test
+
+# Run specific test file
+php artisan test tests/Feature/Domain/Batch/BatchTest.php
+
+# Run with coverage report
+php artisan test --coverage-html coverage
+```
+
+### Code Style
+The project uses Laravel Pint for PHP code styling:
+```bash
+# Check code style
+./vendor/bin/pint --test
+
+# Fix code style
+./vendor/bin/pint
+```
+
+### Database Changes
+When making database changes:
+1. Create a new migration:
+```bash
+php artisan make:migration [migration_name]
+```
+
+2. Define the changes in the migration file:
+```php
+public function up()
+{
+    Schema::table('table_name', function (Blueprint $table) {
+        // Add your changes here
+    });
+}
+```
+
+3. Run the migration:
+```bash
+php artisan migrate
+```
+
+### Frontend Development
+- Components are located in `resources/js/Components/`
+- Pages are located in `resources/js/Pages/`
+- Use the `DecimalInput` component for numeric inputs
+- Follow Vue.js 3 Composition API patterns
+
+## API Documentation
+
+### Batch Management
+
+#### List All Batches
+```http
+GET /api/batches
+```
+
+**Response:**
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "batchNumber": "230323-001",
+            "date": "2024-03-23",
+            "status": "in_progress",
+            "processes": [...]
+        }
+    ]
+}
+```
+
+#### Create New Batch
+```http
+POST /api/batches
+Content-Type: application/json
+
+{
+    "batchNumber": "230323-001",
+    "date": "2024-03-23",
+    "processes": [...]
+}
+```
+
+### Process Management
+
+#### Add Process to Batch
+```http
+POST /api/batches/{id}/processes
+Content-Type: application/json
+
+{
+    "processingType": "kaldo_furnace",
+    "inputTinKilos": 1000,
+    "inputTinSnContent": 75.5,
+    ...
+}
+```
+
+### Inventory Management
+
+#### List Inventory Items
+```http
+GET /api/inventory
+```
+
+**Response:**
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "name": "Raw Tin",
+            "quantity": 5000,
+            "sn_content": 75.5,
+            "status": "active"
+        }
+    ]
+}
+```
+
+## Database Schema
+
+### Batches Table
+```sql
+CREATE TABLE batches (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    batch_number VARCHAR(20) UNIQUE NOT NULL,
+    date DATE NOT NULL,
+    status ENUM('in_progress', 'completed', 'cancelled') NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+);
+```
+
+### Processes Table
+```sql
+CREATE TABLE processes (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    batch_id BIGINT UNSIGNED NOT NULL,
+    process_number INT NOT NULL,
+    processing_type ENUM('kaldo_furnace', 'refining_kettle') NOT NULL,
+    input_tin_kilos DECIMAL(10,2) NOT NULL,
+    input_tin_sn_content DECIMAL(5,4) NOT NULL,
+    output_tin_kilos DECIMAL(10,2) NOT NULL,
+    output_tin_sn_content DECIMAL(5,4) NOT NULL,
+    input_slag_kilos DECIMAL(10,2) NOT NULL,
+    input_slag_sn_content DECIMAL(5,4) NOT NULL,
+    output_slag_kilos DECIMAL(10,2) NOT NULL,
+    output_slag_sn_content DECIMAL(5,4) NOT NULL,
+    notes TEXT,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    FOREIGN KEY (batch_id) REFERENCES batches(id)
+);
+```
+
+### Inventory Items Table
+```sql
+CREATE TABLE inventory_items (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    quantity DECIMAL(10,2) NOT NULL,
+    sn_content DECIMAL(5,4) NOT NULL,
+    status ENUM('active', 'inactive') NOT NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+);
+```
+
+## Deployment Guide
+
+### Production Requirements
+- PHP 8.2+
+- MySQL 8.0+ or PostgreSQL 13+
+- Node.js 16+
+- Composer
+- Nginx/Apache
+
+### Deployment Steps
+
+1. Clone the repository:
+```bash
+git clone [repository-url]
+cd tin-refinery-laravel
+```
+
+2. Install dependencies:
+```bash
+composer install --optimize-autoloader --no-dev
+npm install
+npm run build
+```
+
+3. Configure environment:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+4. Update `.env` for production:
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://your-domain.com
+```
+
+5. Optimize Laravel:
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+6. Set up web server (Nginx example):
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    root /path/to/tin-refinery-laravel/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## Code of Conduct
+### Development Guidelines
+- Follow PSR-12 coding standards
+- Write tests for new features
+- Update documentation as needed
+- Use meaningful commit messages
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Changelog
 
-## Security Vulnerabilities
+### [Unreleased]
+- Implemented domain-driven design architecture
+- Added decimal input support for numeric fields
+- Improved form validation
+- Enhanced batch number generation
+- Added inventory transaction tracking
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### [0.1.0] - 2024-03-23
+- Initial release
+- Basic batch management
+- Process tracking
+- Inventory management
+- User authentication
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
