@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Batch;
-use App\Services\BatchService;
+use App\Domain\Batch\Models\Batch;
+use App\Domain\Batch\Services\BatchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryItem;
-use App\Models\InventoryTransaction;
+use App\Domain\Inventory\Models\InventoryItem;
+use App\Domain\Inventory\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;

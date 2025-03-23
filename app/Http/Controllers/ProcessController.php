@@ -2,11 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Process;
+use App\Domain\Process\Models\Process;
+use App\Domain\Process\Services\ProcessService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProcessController extends Controller
 {
+    private ProcessService $processService;
+
+    public function __construct(ProcessService $processService)
+    {
+        $this->processService = $processService;
+    }
+
     public function index()
     {
         return Process::all();
@@ -19,27 +28,14 @@ class ProcessController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'batch_id' => 'required|exists:batches,id',
-            'process_type' => 'required|string',
-            'status' => 'required|string',
-            'start_time' => 'required|date',
-            'end_time' => 'required|date|after:start_time',
-            'notes' => 'nullable|string',
-            'input_quantity' => 'required|numeric',
-            'output_quantity' => 'required|numeric',
-            'waste_quantity' => 'required|numeric'
-        ]);
+        try {
+            $this->processService->validateProcessData($request->all());
+            $process = $this->processService->createProcess($request->batch, $request->all());
 
-        $process = Process::create([
-            'batchId' => $validated['batch_id'],
-            'processNumber' => 1, // Default to 1 for now
-            'processingType' => $validated['process_type'],
-            'inputTinKilos' => $validated['input_quantity'],
-            'outputTinKilos' => $validated['output_quantity'],
-            'notes' => $validated['notes']
-        ]);
-
-        return response()->json($process, 201);
+            return response()->json($process, 201);
+        } catch (\Exception $e) {
+            Log::error('Error in process creation: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 } 

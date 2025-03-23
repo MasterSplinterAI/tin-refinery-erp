@@ -1,12 +1,18 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Process\Models;
 
+use App\Domain\Batch\Models\Batch;
+use App\Domain\Inventory\Models\InventoryItem;
+use Database\Factories\ProcessFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Process extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'batchId',
         'processNumber',
@@ -37,6 +43,11 @@ class Process extends Model
         'outputSlagSnContent' => 'decimal:2',
     ];
 
+    protected static function newFactory()
+    {
+        return ProcessFactory::new();
+    }
+
     public function batch(): BelongsTo
     {
         return $this->belongsTo(Batch::class, 'batchId');
@@ -61,4 +72,4 @@ class Process extends Model
     {
         return $this->belongsTo(InventoryItem::class, 'outputSlagInventoryItemId');
     }
-}
+} 

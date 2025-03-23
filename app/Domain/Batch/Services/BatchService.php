@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Batch\Services;
 
-use App\Models\Batch;
-use App\Models\Process;
+use App\Domain\Batch\Models\Batch;
+use App\Domain\Process\Models\Process;
+use App\Domain\Process\Services\ProcessService;
+use App\Domain\Inventory\Services\InventoryTransactionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -222,17 +224,17 @@ class BatchService
             'processes' => 'nullable|array',
             'processes.*.processNumber' => 'required_with:processes|integer',
             'processes.*.processingType' => 'required_with:processes|string|in:kaldo_furnace,refining_kettle',
-            'processes.*.inputTinKilos' => 'nullable|numeric',
-            'processes.*.inputTinSnContent' => 'nullable|numeric',
+            'processes.*.inputTinKilos' => 'nullable|numeric|min:0',
+            'processes.*.inputTinSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'processes.*.inputTinInventoryItemId' => 'nullable|exists:inventory_items,id',
-            'processes.*.outputTinKilos' => 'nullable|numeric',
-            'processes.*.outputTinSnContent' => 'nullable|numeric',
+            'processes.*.outputTinKilos' => 'nullable|numeric|min:0',
+            'processes.*.outputTinSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'processes.*.outputTinInventoryItemId' => 'nullable|exists:inventory_items,id',
-            'processes.*.inputSlagKilos' => 'nullable|numeric',
-            'processes.*.inputSlagSnContent' => 'nullable|numeric',
+            'processes.*.inputSlagKilos' => 'nullable|numeric|min:0',
+            'processes.*.inputSlagSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'processes.*.inputSlagInventoryItemId' => 'nullable|exists:inventory_items,id',
-            'processes.*.outputSlagKilos' => 'nullable|numeric',
-            'processes.*.outputSlagSnContent' => 'nullable|numeric',
+            'processes.*.outputSlagKilos' => 'nullable|numeric|min:0',
+            'processes.*.outputSlagSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'processes.*.outputSlagInventoryItemId' => 'nullable|exists:inventory_items,id',
             'processes.*.notes' => 'nullable|string'
         ];

@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Domain\Inventory\Models;
 
+use App\Models\Process;
+use App\Domain\Inventory\Models\InventoryTransaction;
+use Database\Factories\InventoryItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -27,6 +30,11 @@ class InventoryItem extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function newFactory()
+    {
+        return InventoryItemFactory::new();
+    }
 
     // Relationship with inventory transactions
     public function transactions(): HasMany

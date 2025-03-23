@@ -139,6 +139,9 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         Illuminate\Filesystem\FilesystemServiceProvider::class,
+        App\Domain\Inventory\Providers\InventoryServiceProvider::class,
+        App\Domain\Process\Providers\ProcessServiceProvider::class,
+        App\Domain\Batch\Providers\BatchServiceProvider::class,
     ])->toArray(),
 
     'aliases' => Facade::defaultAliases()->merge([

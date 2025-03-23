@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Process\Services;
 
-use App\Models\Batch;
-use App\Models\Process;
+use App\Domain\Batch\Models\Batch;
+use App\Domain\Process\Models\Process;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -46,17 +46,17 @@ class ProcessService
         $rules = [
             'processNumber' => 'required|integer',
             'processingType' => 'required|string|in:kaldo_furnace,refining_kettle',
-            'inputTinKilos' => 'nullable|numeric',
-            'inputTinSnContent' => 'nullable|numeric',
+            'inputTinKilos' => 'nullable|numeric|min:0',
+            'inputTinSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'inputTinInventoryItemId' => 'nullable|exists:inventory_items,id',
-            'outputTinKilos' => 'nullable|numeric',
-            'outputTinSnContent' => 'nullable|numeric',
+            'outputTinKilos' => 'nullable|numeric|min:0',
+            'outputTinSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'outputTinInventoryItemId' => 'nullable|exists:inventory_items,id',
-            'inputSlagKilos' => 'nullable|numeric',
-            'inputSlagSnContent' => 'nullable|numeric',
+            'inputSlagKilos' => 'nullable|numeric|min:0',
+            'inputSlagSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'inputSlagInventoryItemId' => 'nullable|exists:inventory_items,id',
-            'outputSlagKilos' => 'nullable|numeric',
-            'outputSlagSnContent' => 'nullable|numeric',
+            'outputSlagKilos' => 'nullable|numeric|min:0',
+            'outputSlagSnContent' => 'nullable|numeric|min:0|max:100|decimal:0,4',
             'outputSlagInventoryItemId' => 'nullable|exists:inventory_items,id',
             'notes' => 'nullable|string'
         ];

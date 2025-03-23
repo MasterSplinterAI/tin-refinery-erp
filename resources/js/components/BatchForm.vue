@@ -77,18 +77,19 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Quantity (kg)</label>
-                <input
-                  type="number"
-                  v-model.number="process.inputTinKilos"
+                <DecimalInput
+                  v-model="process.inputTinKilos"
+                  :min="0"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
 
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Sn Content (%)</label>
-                <input
-                  type="number"
-                  v-model.number="process.inputTinSnContent"
+                <DecimalInput
+                  v-model="process.inputTinSnContent"
+                  :min="0"
+                  :max="100"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
@@ -114,18 +115,19 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Quantity (kg)</label>
-                <input
-                  type="number"
-                  v-model.number="process.outputTinKilos"
+                <DecimalInput
+                  v-model="process.outputTinKilos"
+                  :min="0"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
 
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Sn Content (%)</label>
-                <input
-                  type="number"
-                  v-model.number="process.outputTinSnContent"
+                <DecimalInput
+                  v-model="process.outputTinSnContent"
+                  :min="0"
+                  :max="100"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
@@ -151,18 +153,19 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Quantity (kg)</label>
-                <input
-                  type="number"
-                  v-model.number="process.inputSlagKilos"
+                <DecimalInput
+                  v-model="process.inputSlagKilos"
+                  :min="0"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
 
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Sn Content (%)</label>
-                <input
-                  type="number"
-                  v-model.number="process.inputSlagSnContent"
+                <DecimalInput
+                  v-model="process.inputSlagSnContent"
+                  :min="0"
+                  :max="100"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
@@ -188,18 +191,19 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Quantity (kg)</label>
-                <input
-                  type="number"
-                  v-model.number="process.outputSlagKilos"
+                <DecimalInput
+                  v-model="process.outputSlagKilos"
+                  :min="0"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
 
               <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Sn Content (%)</label>
-                <input
-                  type="number"
-                  v-model.number="process.outputSlagSnContent"
+                <DecimalInput
+                  v-model="process.outputSlagSnContent"
+                  :min="0"
+                  :max="100"
                   class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
                 />
               </div>
@@ -253,6 +257,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import type { Batch, Process, InventoryItem } from '@/types/batch';
+import DecimalInput from './DecimalInput.vue';
 
 const props = defineProps<{
   existingBatch?: Batch
@@ -368,6 +373,46 @@ const generateBatchNumber = async () => {
       console.log('Generated fallback batch number:', formData.value.batchNumber);
     }
   }
+};
+
+const validateAndUpdateNumber = (event: Event, process: Process, field: keyof Process, isSnContent = false) => {
+  const input = event.target as HTMLInputElement;
+  let value = input.value.replace(',', '.');
+  
+  // Allow empty input
+  if (!value) {
+    process[field] = 0;
+    return;
+  }
+
+  // Remove any non-numeric characters except decimal point
+  value = value.replace(/[^\d.]/g, '');
+  
+  // Ensure only one decimal point
+  const parts = value.split('.');
+  if (parts.length > 2) {
+    value = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  const numValue = parseFloat(value);
+  
+  if (isSnContent) {
+    // For Sn content fields (0-100)
+    if (!isNaN(numValue)) {
+      if (numValue > 100) process[field] = 100;
+      else if (numValue < 0) process[field] = 0;
+      else process[field] = numValue;
+    }
+  } else {
+    // For quantity fields (no upper limit, but must be >= 0)
+    if (!isNaN(numValue)) {
+      if (numValue < 0) process[field] = 0;
+      else process[field] = numValue;
+    }
+  }
+  
+  // Update the input value to show the validated number
+  input.value = process[field].toString();
 };
 
 const handleSubmit = () => {
