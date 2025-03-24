@@ -3,6 +3,7 @@
 [![Laravel](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)
 [![Vue.js](https://img.shields.io/badge/Vue.js-3.x-green.svg)](https://vuejs.org)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-blue.svg)](https://php.net)
+[![Xero](https://img.shields.io/badge/Xero-API-green.svg)](https://developer.xero.com/)
 
 A comprehensive Enterprise Resource Planning (ERP) system for tin refinery operations, built with Laravel and Vue.js.
 
@@ -30,7 +31,69 @@ This system manages the entire tin refinery process, including:
 - Inventory management
 - Yield calculations
 - Sn content tracking
+- Currency exchange tracking with Xero integration
+- Purchase order management
 - User authentication and authorization
+
+## Recent Updates and Progress
+
+### Completed Features
+1. Basic Application Setup
+   - Laravel 10.x installation with Vite
+   - Database configuration and migrations
+   - Authentication system implementation
+   - Basic UI with Tailwind CSS
+
+2. Batch Management System
+   - Batch creation and tracking
+   - Batch number generation system
+   - Quality control parameters
+   - Batch status tracking
+
+3. Infrastructure Setup
+   - Ngrok integration for external access
+   - CORS configuration
+   - HTTPS enforcement
+   - Asset handling with Vite
+   - Automatic asset path updates
+
+4. Xero API Integration
+   - OAuth2 authentication flow implemented
+   - Secure token storage and management
+   - Automatic token refresh mechanism
+   - Tenant ID management
+   - Currency exchange integration
+   - Bank transaction creation
+
+### In Progress
+1. Currency Exchange & Purchase Order System
+   - Currency exchange tracking
+   - Xero integration for currency exchanges
+   - Purchase order management
+   - Inventory cost basis tracking
+
+### Next Steps
+
+#### 1. Complete Purchase Order Module
+- [ ] Design database schema for PO management
+- [ ] Create PO CRUD operations
+- [ ] Implement PO status workflow
+- [ ] Add PO approval system
+- [ ] Integrate with Xero for PO creation
+- [ ] Add email notifications for PO status changes
+
+#### 2. Inventory Management Enhancement
+- [ ] Link inventory to currency exchanges via POs
+- [ ] Implement cost basis tracking
+- [ ] Integrate with Xero for inventory transactions
+- [ ] Add inventory reporting
+
+#### 3. Additional Features
+- [ ] Implement reporting system
+- [ ] Add data export functionality
+- [ ] Create dashboard with key metrics
+- [ ] Implement user roles and permissions
+- [ ] Add audit logging
 
 ## Tech Stack
 
@@ -48,6 +111,10 @@ This system manages the entire tin refinery process, including:
 - HeadlessUI
 - Vite
 
+### Integrations
+- Xero API (Accounting)
+- Ngrok (Secure tunneling for development)
+
 ## Project Structure
 
 ```plaintext
@@ -62,6 +129,10 @@ tin-refinery-laravel/
 │   │   │   ├── Models/        # Process-related models
 │   │   │   ├── Services/      # Process business logic
 │   │   │   └── Providers/     # Service providers
+│   │   ├── ExchangeRate/      # Currency exchange domain
+│   │   │   ├── Models/        # Exchange-related models
+│   │   │   ├── Services/      # Exchange business logic
+│   │   │   └── Providers/     # Service providers
 │   │   └── Inventory/         # Inventory management domain
 │   │       ├── Models/        # Inventory-related models
 │   │       ├── Services/      # Inventory business logic
@@ -69,23 +140,36 @@ tin-refinery-laravel/
 │   ├── Http/
 │   │   ├── Controllers/       # HTTP Controllers
 │   │   └── Middleware/        # HTTP Middleware
+│   ├── Services/              # Application services
+│   │   └── XeroService.php    # Xero API integration service
 │   └── Providers/             # Service Providers
+│       └── XeroServiceProvider.php # Xero API service provider
+├── public/
+│   ├── build/                 # Compiled assets (Vite output)
+│   │   └── assets/            # Hashed asset files
+│   └── index.php              # Application entry point
 ├── resources/
 │   ├── js/
 │   │   ├── Components/        # Vue Components
-│   │   │   ├── BatchForm.vue  # Batch form component
-│   │   │   └── DecimalInput.vue # Custom numeric input
-│   │   ├── Pages/            # Inertia Pages
-│   │   └── types/            # TypeScript types
-│   └── views/                # Blade templates
+│   │   ├── Layouts/           # Layout components
+│   │   ├── Pages/             # Inertia Pages
+│   │   │   ├── Auth/          # Authentication pages
+│   │   │   ├── CurrencyExchanges/ # Currency exchange pages
+│   │   │   └── Dashboard.vue  # Dashboard page
+│   │   └── types/             # TypeScript types
+│   ├── css/                   # CSS files
+│   └── views/                 # Blade templates
+│       └── xero/              # Xero integration views
 ├── routes/
-│   ├── api.php               # API routes
-│   ├── web.php               # Web routes
-│   └── auth.php              # Authentication routes
+│   ├── api.php                # API routes
+│   ├── web.php                # Web routes
+│   └── auth.php               # Authentication routes
+├── config/
+│   └── xero.php               # Xero API configuration
 └── database/
-    ├── migrations/           # Database migrations
-    ├── seeders/             # Database seeders
-    └── factories/           # Model factories
+    ├── migrations/            # Database migrations
+    ├── seeders/               # Database seeders
+    └── factories/             # Model factories
 ```
 
 ## Key Features
@@ -107,11 +191,19 @@ tin-refinery-laravel/
   - Tracks Sn content changes throughout the process
   - Maintains inventory transaction history
 
+### Currency Exchange Management
+- Track currency exchanges between USD and COP
+- Calculate and store exchange rates
+- Track bank fees
+- Integration with Xero for accounting
+- Syncing of exchange transactions to Xero
+
 ### Inventory Management
 - Track tin and slag inventory
 - Monitor Sn content in inventory items
 - Record inventory transactions
 - Manage stock levels
+- Cost basis tracking in multiple currencies
 
 ## Setup Instructions
 
@@ -121,6 +213,7 @@ tin-refinery-laravel/
 - Node.js 16+ and npm
 - MySQL 8.0+ or PostgreSQL 13+
 - Git
+- Ngrok for external access and Xero API integration
 
 ### Installation Steps
 
@@ -156,23 +249,81 @@ DB_USERNAME=your_username
 DB_PASSWORD=your_password
 ```
 
-6. Run migrations and seeders:
+6. Configure Xero API integration in `.env`:
+```env
+XERO_CLIENT_ID=your_xero_client_id
+XERO_CLIENT_SECRET=your_xero_client_secret
+XERO_REDIRECT_URI=https://your-ngrok-domain.ngrok-free.app/xero/iframe-callback
+XERO_WEBHOOK_KEY=
+XERO_CREDENTIAL_DISK=local
+
+# Xero Account Codes - Update these to match your Xero Chart of Accounts
+XERO_USD_BANK_ACCOUNT=1000
+XERO_COP_BANK_ACCOUNT=1001
+XERO_MAIN_BANK_ACCOUNT=1000
+XERO_BANK_FEES_ACCOUNT=6000
+XERO_INVENTORY_ASSET_ACCOUNT=1200
+XERO_COGS_ACCOUNT=5000
+XERO_REVENUE_ACCOUNT=4000
+```
+
+7. Run migrations and seeders:
 ```bash
 php artisan migrate
 php artisan db:seed
 ```
 
-7. Start the development server:
+8. Build frontend assets:
 ```bash
-# Using Laravel Sail (recommended)
-./vendor/bin/sail up
+npm run build
+```
 
-# Or using artisan
-php artisan serve
+9. Start the development server:
+```bash
+# Start Laravel server on port 8001
+php artisan serve --port=8001
+
+# If using Vite dev server for HMR
 npm run dev
 ```
 
+10. Set up Ngrok for external access and Xero integration:
+```bash
+# Install Ngrok if you haven't already
+# Then start an Ngrok tunnel pointing to your local server
+ngrok http 8001
+
+# Update your .env file with the Ngrok URL
+APP_URL=https://your-ngrok-domain.ngrok-free.app
+```
+
+11. Configure Xero App in the [Xero Developer Portal](https://developer.xero.com/):
+- Create a new app in the Xero Developer Portal
+- Set the redirect URL to `https://your-ngrok-domain.ngrok-free.app/xero/iframe-callback`
+- Copy the Client ID and Client Secret to your `.env` file
+
 ## Development Workflow
+
+### Git Workflow
+```bash
+# Create a feature branch
+git checkout -b feature/feature-name
+
+# Make your changes and commit them
+git add .
+git commit -m "Description of changes"
+
+# Push to the remote repository
+git push origin feature/feature-name
+
+# Create a pull request to the dev branch
+# After review, merge into dev
+
+# For production releases
+git checkout main
+git merge dev
+git push origin main
+```
 
 ### Running Tests
 ```bash
@@ -184,6 +335,20 @@ php artisan test tests/Feature/Domain/Batch/BatchTest.php
 
 # Run with coverage report
 php artisan test --coverage-html coverage
+```
+
+### Asset Management
+The project uses Vite for asset compilation and management. When building for production or when using Ngrok, the assets are automatically processed with proper path handling.
+
+```bash
+# Build assets for production/Ngrok
+npm run build
+
+# Development with HMR
+npm run dev
+
+# Clear Laravel caches
+npm run clear-cache
 ```
 
 ### Code Style
@@ -443,11 +608,21 @@ server {
 ## Changelog
 
 ### [Unreleased]
-- Implemented domain-driven design architecture
-- Added decimal input support for numeric fields
-- Improved form validation
-- Enhanced batch number generation
-- Added inventory transaction tracking
+- Implemented Xero API integration for currency exchanges
+- Added multi-currency support
+- Enhanced asset handling for ngrok deployments
+- Improved error handling and logging
+- Added automatic asset path updates
+- Implemented tenant ID management for Xero API
+- Added dashboard with currency exchange status
+
+### [0.2.0] - 2024-03-24
+- Added Xero API integration
+- Implemented OAuth2 authentication flow
+- Created XeroService for API interactions
+- Added currency exchange tracking
+- Implemented bank transaction creation in Xero
+- Added configuration for Xero account codes
 
 ### [0.1.0] - 2024-03-23
 - Initial release
