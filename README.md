@@ -133,10 +133,17 @@ tin-refinery-laravel/
 │   │   │   ├── Models/        # Exchange-related models
 │   │   │   ├── Services/      # Exchange business logic
 │   │   │   └── Providers/     # Service providers
-│   │   └── Inventory/         # Inventory management domain
-│   │       ├── Models/        # Inventory-related models
-│   │       ├── Services/      # Inventory business logic
-│   │       └── Providers/     # Service providers
+│   │   ├── Inventory/         # Inventory management domain
+│   │   │   ├── Models/        # Inventory-related models
+│   │   │   ├── Services/      # Inventory business logic
+│   │   │   └── Providers/     # Service providers
+│   │   ├── PurchaseOrder/     # Purchase order domain
+│   │   │   ├── Models/        # PO-related models
+│   │   │   ├── Services/      # PO business logic
+│   │   │   └── Providers/     # Service providers
+│   │   └── Common/            # Shared domain components
+│   │       ├── Events/        # Shared domain events
+│   │       └── Contracts/     # Shared interfaces
 │   ├── Http/
 │   │   ├── Controllers/       # HTTP Controllers
 │   │   └── Middleware/        # HTTP Middleware
@@ -171,6 +178,42 @@ tin-refinery-laravel/
     ├── seeders/               # Database seeders
     └── factories/             # Model factories
 ```
+
+### Domain Structure
+Each domain follows a clean architecture pattern with the following structure:
+```
+Domain/
+├── Contracts/          # Interface definitions
+├── Events/            # Domain events
+├── Models/            # Domain models
+└── Services/          # Business logic services
+```
+
+### Key Domain Implementations
+
+#### Currency Exchange Domain
+- Real-time exchange rate tracking
+- Multi-currency support (USD, COP)
+- Xero integration for transactions
+- Bank fee tracking
+- Exchange rate history
+
+Key files:
+- `app/Domain/ExchangeRate/Models/CurrencyExchange.php`
+- `app/Domain/ExchangeRate/Services/CurrencyExchangeService.php`
+- `app/Domain/ExchangeRate/Services/XeroIntegrationService.php`
+
+#### Purchase Order Domain
+- Purchase order management
+- Line item tracking
+- Status workflow
+- Xero integration
+- Cost basis tracking
+
+Key files:
+- `app/Domain/PurchaseOrder/Models/PurchaseOrder.php`
+- `app/Domain/PurchaseOrder/Models/PurchaseOrderItem.php`
+- `app/Domain/PurchaseOrder/Services/PurchaseOrderService.php`
 
 ## Key Features
 
