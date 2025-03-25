@@ -13,6 +13,28 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # Make sure build assets are served directly
+    RewriteCond %{REQUEST_URI} ^/build/
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule .* - [L]
+
+    # Handle direct access to app.js and app.css
+    RewriteCond %{REQUEST_URI} ^/resources/js/app.js
+    RewriteRule ^(.*)$ /build/assets/app-y-fcL2YG.js [L]
+
+    RewriteCond %{REQUEST_URI} ^/resources/css/app.css
+    RewriteRule ^(.*)$ /build/assets/app-o2VBFKFS.css [L]
+
+    # Handle access to @vite/client
+    RewriteCond %{REQUEST_URI} ^/@vite/client
+    RewriteRule ^(.*)$ /build/assets/app-y-fcL2YG.js [L]
+
+    # If the requested file exists in build/assets, redirect there
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_URI} \.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|ico)$
+    RewriteCond %{DOCUMENT_ROOT}/build/assets/%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ /build/assets/$1 [L]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
@@ -22,4 +44,20 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# Set proper MIME types for JavaScript modules
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType application/javascript .mjs
+</IfModule>
+
+# Add proper headers for JavaScript modules
+<IfModule mod_headers.c>
+    <FilesMatch "\.js$">
+        Header set Content-Type "application/javascript"
+    </FilesMatch>
+    <FilesMatch "\.mjs$">
+        Header set Content-Type "application/javascript"
+    </FilesMatch>
 </IfModule>

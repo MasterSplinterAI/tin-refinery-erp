@@ -31,8 +31,15 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
-
+        session()->regenerate();
+        
+        // For ngrok domains, ensure we're using the correct hostname
+        $host = request()->getHost();
+        if (str_contains($host, 'ngrok-free.app')) {
+            // Make sure we're using the full ngrok URL
+            return redirect()->to(config('app.url') . '/dashboard');
+        }
+        
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

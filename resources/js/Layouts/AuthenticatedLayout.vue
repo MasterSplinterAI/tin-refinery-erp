@@ -45,6 +45,12 @@ const showingNavigationDropdown = ref(false);
                                 >
                                     Inventory
                                 </NavLink>
+                                <NavLink
+                                    :href="route('currency-exchanges.index')"
+                                    :active="route().current('currency-exchanges.*')"
+                                >
+                                    Currency Exchange
+                                </NavLink>
                             </div>
                         </div>
 
@@ -148,6 +154,12 @@ const showingNavigationDropdown = ref(false);
                             :active="route().current('inventory.index')"
                         >
                             Inventory
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            :href="route('currency-exchanges.index')"
+                            :active="route().current('currency-exchanges.*')"
+                        >
+                            Currency Exchange
                         </ResponsiveNavLink>
                     </div>
 

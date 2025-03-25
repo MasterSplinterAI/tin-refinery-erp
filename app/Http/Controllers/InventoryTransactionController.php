@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Domain\Inventory\Models\InventoryItem;
 use App\Domain\Inventory\Models\InventoryTransaction;
+use App\Domain\Inventory\Events\InventoryAdjustmentCreated;
+use App\Domain\Inventory\Events\InventoryTransactionReversed;
+use App\Domain\Inventory\Events\InventoryQuantityChanged;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Event;
 
 class InventoryTransactionController extends Controller
 {
@@ -51,6 +55,7 @@ class InventoryTransactionController extends Controller
             DB::beginTransaction();
 
             $inventoryItem = InventoryItem::findOrFail($request->inventory_item_id);
+            $oldQuantity = $inventoryItem->quantity;
             
             // Create the transaction
             $transaction = InventoryTransaction::create([
@@ -66,6 +71,22 @@ class InventoryTransactionController extends Controller
             // Update inventory item quantity
             $inventoryItem->quantity += $request->quantity;
             $inventoryItem->save();
+
+            // Dispatch events
+            Event::dispatch(new InventoryAdjustmentCreated([
+                'transaction_id' => $transaction->id,
+                'inventory_item_id' => $request->inventory_item_id,
+                'quantity' => $request->quantity,
+                'unit_price' => $request->unit_price,
+                'currency' => $request->currency,
+                'notes' => $request->notes
+            ]));
+
+            Event::dispatch(new InventoryQuantityChanged([
+                'inventory_item_id' => $request->inventory_item_id,
+                'old_quantity' => $oldQuantity,
+                'new_quantity' => $inventoryItem->quantity
+            ]));
 
             DB::commit();
 
@@ -99,11 +120,12 @@ class InventoryTransactionController extends Controller
 
             // Reverse the quantity change
             $inventoryItem = $transaction->inventory_item;
+            $oldQuantity = $inventoryItem->quantity;
             $inventoryItem->quantity -= $transaction->quantity;
             $inventoryItem->save();
 
             // Create a reversal transaction
-            InventoryTransaction::create([
+            $reversalTransaction = InventoryTransaction::create([
                 'inventory_item_id' => $transaction->inventory_item_id,
                 'type' => 'reversal',
                 'quantity' => -$transaction->quantity,
@@ -113,6 +135,21 @@ class InventoryTransactionController extends Controller
                 'reference_id' => $transaction->id,
                 'notes' => 'Reversal of transaction #' . $transaction->id
             ]);
+
+            // Dispatch events
+            Event::dispatch(new InventoryTransactionReversed([
+                'transaction_id' => $reversalTransaction->id,
+                'original_transaction_id' => $transaction->id,
+                'inventory_item_id' => $transaction->inventory_item_id,
+                'quantity' => -$transaction->quantity,
+                'notes' => 'Reversal of transaction #' . $transaction->id
+            ]));
+
+            Event::dispatch(new InventoryQuantityChanged([
+                'inventory_item_id' => $transaction->inventory_item_id,
+                'old_quantity' => $oldQuantity,
+                'new_quantity' => $inventoryItem->quantity
+            ]));
 
             // Delete the original transaction
             $transaction->delete();

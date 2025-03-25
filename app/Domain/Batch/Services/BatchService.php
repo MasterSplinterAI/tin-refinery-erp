@@ -190,28 +190,49 @@ class BatchService
     {
         $date = now();
         $datePrefix = $date->format('dmy-');
+        
+        // Check if there are any existing batches with the same format for today's date
+        $existingBatchNumber = Batch::where('batchNumber', 'like', $datePrefix . '%')
+            ->exists();
+            
+        // If we're looking at a batch list with different dates, find the matching prefix pattern
+        if (!$existingBatchNumber) {
+            // Get the first batch to determine the format/date they're using
+            $firstBatch = Batch::orderBy('id', 'asc')->first();
+            if ($firstBatch) {
+                // Extract the prefix part (before the dash)
+                $parts = explode('-', $firstBatch->batchNumber);
+                if (count($parts) > 1) {
+                    $datePrefix = $parts[0] . '-';
+                }
+            }
+        }
 
-        $todayBatches = Batch::where('batchNumber', 'like', $datePrefix . '%')
+        // Get all batch numbers with this prefix and extract the sequential part
+        $matchingBatches = Batch::where('batchNumber', 'like', $datePrefix . '%')
             ->get()
             ->map(function ($batch) use ($datePrefix) {
+                // Extract just the numeric part after the prefix
                 return (int) substr($batch->batchNumber, strlen($datePrefix));
             })
             ->toArray();
 
-        if (empty($todayBatches)) {
-            return 1;
+        if (empty($matchingBatches)) {
+            return 1; // Start with 1 if no batches exist with this prefix
         }
 
-        sort($todayBatches);
-        $maxNumber = max($todayBatches);
-
-        for ($i = 1; $i <= $maxNumber; $i++) {
-            if (!in_array($i, $todayBatches)) {
-                return $i;
+        // Sort the batch numbers to ensure proper sequence
+        sort($matchingBatches);
+        
+        // Check for gaps in the sequence
+        for ($i = 1; $i <= count($matchingBatches) + 1; $i++) {
+            if (!in_array($i, $matchingBatches)) {
+                return $i; // Return the first available number in the sequence
             }
         }
 
-        return $maxNumber + 1;
+        // This line should never be reached, but just in case
+        return max($matchingBatches) + 1;
     }
 
     public function validateBatchData(array $data): bool

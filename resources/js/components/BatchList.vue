@@ -58,6 +58,14 @@
                   Cancel
                 </button>
               </template>
+              <template v-else-if="batch.status === 'completed'">
+                <button
+                  @click="$emit('statusChange', batch.id, 'in_progress')"
+                  class="text-blue-600 hover:text-blue-900"
+                >
+                  Reopen
+                </button>
+              </template>
               <button
                 @click="confirmDelete(batch)"
                 class="text-red-600 hover:text-red-900"

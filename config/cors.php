@@ -14,16 +14,11 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', '@vite/*', 'resources/*', 'build/*', 'xero/*', 'login', 'logout', '*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        'http://localhost:5176',
-        'http://127.0.0.1:5176',
-        'http://forex.tplinkdns.com:5176',
-        'http://192.168.*:5176'
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
@@ -34,4 +29,6 @@ return [
     'max_age' => 0,
 
     'supports_credentials' => true,
+
+    'paths_without_csrf' => ['xero/callback'],
 ]; 

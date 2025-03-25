@@ -2,7 +2,7 @@
 
 namespace App\Domain\Inventory\Models;
 
-use App\Models\Process;
+use App\Domain\Process\Models\Process;
 use App\Domain\Inventory\Models\InventoryTransaction;
 use Database\Factories\InventoryItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,11 +22,21 @@ class InventoryItem extends Model
         'sn_content',
         'location',
         'status',
+        'cost_basis_usd',
+        'cost_basis_cop',
+        'last_purchase_date',
+        'last_purchase_price_usd',
+        'last_purchase_price_cop'
     ];
 
     protected $casts = [
         'quantity' => 'float',
         'sn_content' => 'float',
+        'cost_basis_usd' => 'decimal:2',
+        'cost_basis_cop' => 'decimal:2',
+        'last_purchase_price_usd' => 'decimal:2',
+        'last_purchase_price_cop' => 'decimal:2',
+        'last_purchase_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -7,6 +7,7 @@ use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvi
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -17,17 +18,17 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @var string
      */
-    public const HOME = '/batches';
+    public const HOME = '/dashboard';
 
     /**
      * Define your route model bindings, pattern filters, and other route configuration.
      */
     public function boot(): void
     {
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
-        });
-
+        // Force HTTPS for URLs when running behind a proxy (ngrok)
+        $this->configureRateLimiting();
+        $this->configureUrlScheme();
+        
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
@@ -36,5 +37,28 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });
+    }
+    
+    /**
+     * Configure the rate limiters for the application.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+    }
+    
+    /**
+     * Configure URL scheme based on environment.
+     */
+    protected function configureUrlScheme(): void
+    {
+        // Only force HTTPS for ngrok URLs, not for localhost
+        $host = request()->getHost();
+        
+        if (str_contains($host, 'ngrok-free.app')) {
+            URL::forceScheme('https');
+        }
     }
 } 

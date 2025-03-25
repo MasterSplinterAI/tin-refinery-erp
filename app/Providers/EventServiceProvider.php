@@ -2,10 +2,16 @@
 
 namespace App\Providers;
 
+use App\Domain\Common\Events\DomainEvent;
+use App\Domain\Inventory\Events\InventoryTransactionCreated;
+use App\Domain\Inventory\Events\InventoryTransactionReversed;
+use App\Domain\Inventory\Events\InventoryQuantityChanged;
+use App\Domain\Inventory\Events\InventoryAdjustmentCreated;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -25,7 +31,15 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        parent::boot();
+
+        // Log all domain events
+        Event::listen(DomainEvent::class, function ($event) {
+            Log::info('Domain Event: ' . get_class($event), [
+                'event_data' => $event->getData(),
+                'timestamp' => $event->getTimestamp()
+            ]);
+        });
     }
 
     /**

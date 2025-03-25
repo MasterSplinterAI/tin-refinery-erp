@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class LoginRequest extends FormRequest
 {
@@ -41,13 +42,31 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        Log::info('Login attempt', [
+            'email' => $this->input('email'),
+            'remember' => $this->boolean('remember'),
+            'host' => request()->getHost(),
+            'origin' => request()->header('origin'),
+            'user_agent' => request()->userAgent(),
+        ]);
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+
+            Log::warning('Login failed', [
+                'email' => $this->input('email'),
+                'ip' => $this->ip(),
+            ]);
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
+
+        Log::info('Login successful', [
+            'email' => $this->input('email'),
+            'user_id' => Auth::id(),
+        ]);
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -80,6 +99,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->input('email')).'|'.$this->ip());
     }
 }

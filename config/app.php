@@ -142,9 +142,13 @@ return [
         App\Domain\Inventory\Providers\InventoryServiceProvider::class,
         App\Domain\Process\Providers\ProcessServiceProvider::class,
         App\Domain\Batch\Providers\BatchServiceProvider::class,
+        App\Providers\ExchangeRateServiceProvider::class,
+        App\Providers\XeroServiceProvider::class,
     ])->toArray(),
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+
+    'asset_url' => env('ASSET_URL'),
 ];

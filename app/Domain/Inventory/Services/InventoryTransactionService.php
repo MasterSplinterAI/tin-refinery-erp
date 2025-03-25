@@ -6,9 +6,13 @@ use App\Domain\Batch\Models\Batch;
 use App\Domain\Inventory\Models\InventoryItem;
 use App\Domain\Inventory\Models\InventoryTransaction;
 use App\Domain\Inventory\Repositories\InventoryRepositoryInterface;
+use App\Domain\Inventory\Events\InventoryTransactionCreated;
+use App\Domain\Inventory\Events\InventoryTransactionReversed;
+use App\Domain\Inventory\Events\InventoryQuantityChanged;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Event;
 
 class InventoryTransactionService
 {
@@ -31,9 +35,10 @@ class InventoryTransactionService
                 }
 
                 $inventoryItem = $this->inventoryRepository->findOrFail($material['inventory_item_id']);
+                $oldQuantity = $inventoryItem->quantity;
                 
                 // Create consumption transaction
-                InventoryTransaction::create([
+                $transaction = InventoryTransaction::create([
                     'inventory_item_id' => $material['inventory_item_id'],
                     'type' => 'consumption',
                     'quantity' => -$material['quantity'],
@@ -45,6 +50,22 @@ class InventoryTransactionService
 
                 // Update inventory quantity
                 $this->inventoryRepository->decrementQuantity($inventoryItem, $material['quantity']);
+
+                // Dispatch events
+                Event::dispatch(new InventoryTransactionCreated([
+                    'transaction_id' => $transaction->id,
+                    'inventory_item_id' => $material['inventory_item_id'],
+                    'type' => 'consumption',
+                    'quantity' => -$material['quantity'],
+                    'reference_type' => 'batch',
+                    'reference_id' => $batch->id
+                ]));
+
+                Event::dispatch(new InventoryQuantityChanged([
+                    'inventory_item_id' => $material['inventory_item_id'],
+                    'old_quantity' => $oldQuantity,
+                    'new_quantity' => $inventoryItem->quantity
+                ]));
             }
 
             // Process output materials (production)
@@ -54,9 +75,10 @@ class InventoryTransactionService
                 }
 
                 $inventoryItem = $this->inventoryRepository->findOrFail($material['inventory_item_id']);
+                $oldQuantity = $inventoryItem->quantity;
 
                 // Create production transaction
-                InventoryTransaction::create([
+                $transaction = InventoryTransaction::create([
                     'inventory_item_id' => $material['inventory_item_id'],
                     'type' => 'production',
                     'quantity' => $material['quantity'],
@@ -68,6 +90,22 @@ class InventoryTransactionService
 
                 // Update inventory quantity
                 $this->inventoryRepository->incrementQuantity($inventoryItem, $material['quantity']);
+
+                // Dispatch events
+                Event::dispatch(new InventoryTransactionCreated([
+                    'transaction_id' => $transaction->id,
+                    'inventory_item_id' => $material['inventory_item_id'],
+                    'type' => 'production',
+                    'quantity' => $material['quantity'],
+                    'reference_type' => 'batch',
+                    'reference_id' => $batch->id
+                ]));
+
+                Event::dispatch(new InventoryQuantityChanged([
+                    'inventory_item_id' => $material['inventory_item_id'],
+                    'old_quantity' => $oldQuantity,
+                    'new_quantity' => $inventoryItem->quantity
+                ]));
             }
 
             DB::commit();
@@ -89,9 +127,10 @@ class InventoryTransactionService
 
             foreach ($transactions as $transaction) {
                 $inventoryItem = $this->inventoryRepository->findOrFail($transaction->inventory_item_id);
+                $oldQuantity = $inventoryItem->quantity;
 
                 // Create reversal transaction
-                InventoryTransaction::create([
+                $reversalTransaction = InventoryTransaction::create([
                     'inventory_item_id' => $transaction->inventory_item_id,
                     'type' => 'reversal',
                     'quantity' => -$transaction->quantity, // Reverse the quantity
@@ -107,6 +146,23 @@ class InventoryTransactionService
                 } else {
                     $this->inventoryRepository->decrementQuantity($inventoryItem, $transaction->quantity);
                 }
+
+                // Dispatch events
+                Event::dispatch(new InventoryTransactionReversed([
+                    'transaction_id' => $reversalTransaction->id,
+                    'original_transaction_id' => $transaction->id,
+                    'inventory_item_id' => $transaction->inventory_item_id,
+                    'type' => 'reversal',
+                    'quantity' => -$transaction->quantity,
+                    'reference_type' => 'batch',
+                    'reference_id' => $batch->id
+                ]));
+
+                Event::dispatch(new InventoryQuantityChanged([
+                    'inventory_item_id' => $transaction->inventory_item_id,
+                    'old_quantity' => $oldQuantity,
+                    'new_quantity' => $inventoryItem->quantity
+                ]));
             }
 
             DB::commit();

@@ -1,0 +1,123 @@
+{
+  "info": {
+    "name": "Xero OAuth",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get Authorization Code",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://login.xero.com/identity/connect/authorize?response_type=code&client_id=5B6E849A47CF45E19B930034BC78FEEA&redirect_uri=https://906f-2603-9000-f700-3ff6-00-1001.ngrok-free.app/callback&scope=offline_access openid profile email accounting.transactions accounting.settings&state=123",
+          "protocol": "https",
+          "host": ["login.xero.com"],
+          "path": ["identity", "connect", "authorize"],
+          "query": [
+            {
+              "key": "response_type",
+              "value": "code"
+            },
+            {
+              "key": "client_id",
+              "value": "5B6E849A47CF45E19B930034BC78FEEA"
+            },
+            {
+              "key": "redirect_uri",
+              "value": "https://906f-2603-9000-f700-3ff6-00-1001.ngrok-free.app/callback"
+            },
+            {
+              "key": "scope",
+              "value": "offline_access openid profile email accounting.transactions accounting.settings"
+            },
+            {
+              "key": "state",
+              "value": "123"
+            }
+          ]
+        },
+        "description": "First step in OAuth flow - get authorization code"
+      }
+    },
+    {
+      "name": "2. Get Access Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "grant_type",
+              "value": "authorization_code"
+            },
+            {
+              "key": "code",
+              "value": "{{code}}"
+            },
+            {
+              "key": "redirect_uri",
+              "value": "https://906f-2603-9000-f700-3ff6-00-1001.ngrok-free.app/callback"
+            },
+            {
+              "key": "client_id",
+              "value": "5B6E849A47CF45E19B930034BC78FEEA"
+            },
+            {
+              "key": "client_secret",
+              "value": "kR9L4XzhPYJY1WMF_yOIeyOUjSqOV-N9QfcI_5xMgfA7_MUC"
+            }
+          ]
+        },
+        "url": {
+          "raw": "https://identity.xero.com/connect/token",
+          "protocol": "https",
+          "host": ["identity.xero.com"],
+          "path": ["connect", "token"]
+        },
+        "description": "Second step in OAuth flow - exchange code for access token"
+      }
+    },
+    {
+      "name": "3. Test Connection",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "https://api.xero.com/connections",
+          "protocol": "https",
+          "host": ["api.xero.com"],
+          "path": ["connections"]
+        },
+        "description": "Test the connection by getting organization details"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "code",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+} 

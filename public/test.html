@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ngrok Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        .info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ngrok Test Page</h1>
+    <p>If you can see this page, static HTML files are being served correctly through ngrok.</p>
+    
+    <div class="info">
+        <p>Current time according to your browser: <span id="time"></span></p>
+        <p>User agent: <span id="user-agent"></span></p>
+    </div>
+
+    <script>
+        document.getElementById('time').textContent = new Date().toString();
+        document.getElementById('user-agent').textContent = navigator.userAgent;
+    </script>
+</body>
+</html> 

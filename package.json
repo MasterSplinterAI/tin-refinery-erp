@@ -2,8 +2,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "dev": "vite --port 5176"
+        "build": "vite build && php update-assets.php",
+        "dev": "vite --port 5176",
+        "clear-cache": "php clear-caches.php"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",

@@ -1,11 +1,12 @@
 <script setup>
-import Checkbox from '@/Components/Checkbox.vue';
+import Checkbox from '@/components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
+import InputError from '@/components/InputError.vue';
+import InputLabel from '@/components/InputLabel.vue';
+import PrimaryButton from '@/components/PrimaryButton.vue';
+import TextInput from '@/components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 
 defineProps({
     canResetPassword: {
@@ -14,17 +15,48 @@ defineProps({
     status: {
         type: String,
     },
+    csrf_token: {
+        type: String,
+    }
 });
 
 const form = useForm({
     email: '',
     password: '',
     remember: false,
+    _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+});
+
+onMounted(() => {
+    // Ensure CSRF token is included with the form
+    console.log('CSRF token in login form:', form._token);
 });
 
 const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
+    // Use current origin to ensure we stay on the same domain
+    const loginUrl = window.location.origin + '/login';
+    console.log('Submitting login to:', loginUrl);
+    
+    // Use axios directly for more control
+    window.axios.post(loginUrl, {
+        email: form.email,
+        password: form.password,
+        remember: form.remember,
+        _token: form._token
+    })
+    .then(response => {
+        console.log('Login successful, redirecting to dashboard');
+        window.location.href = window.location.origin + '/dashboard';
+    })
+    .catch(error => {
+        console.error('Login error:', error);
+        if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', error.response.data);
+        }
+        
+        // Reset password field
+        form.reset('password');
     });
 };
 </script>
@@ -38,6 +70,8 @@ const submit = () => {
         </div>
 
         <form @submit.prevent="submit">
+            <input type="hidden" name="_token" :value="form._token">
+            
             <div>
                 <InputLabel for="email" value="Email" />
 
