@@ -19,8 +19,8 @@
         
         <!-- Load compiled assets directly when using ngrok -->
         @if(str_contains(request()->getHost(), 'ngrok'))
-            <link rel="stylesheet" href="{{ asset('build/assets/app-o2VBFKFS.css') }}">
-            <script type="module" src="{{ asset('build/assets/app-y-fcL2YG.js') }}"></script>
+            <link rel="stylesheet" href="{{ asset('build/assets/app-BkP60gpZ.css') }}">
+            <script type="module" src="{{ asset('build/assets/app-52CAVntt.js') }}"></script>
         @else
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif

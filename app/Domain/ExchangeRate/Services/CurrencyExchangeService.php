@@ -7,14 +7,16 @@ use App\Domain\ExchangeRate\Models\ExchangeRate;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\XeroService;
+use App\Domain\Common\Models\AccountMapping;
 
 class CurrencyExchangeService
 {
-    protected $xeroIntegrationService;
+    protected $xeroService;
 
-    public function __construct(XeroIntegrationService $xeroIntegrationService = null)
+    public function __construct(XeroService $xeroService)
     {
-        $this->xeroIntegrationService = $xeroIntegrationService;
+        $this->xeroService = $xeroService;
     }
 
     /**
@@ -34,9 +36,9 @@ class CurrencyExchangeService
             $exchange = CurrencyExchange::create($data);
 
             // Only attempt Xero integration if the service is available
-            if ($this->xeroIntegrationService) {
+            if ($this->xeroService) {
                 try {
-                    $xeroBillId = $this->xeroIntegrationService->createBill($exchange);
+                    $xeroBillId = $this->xeroService->createCurrencyExchange($data);
                     if ($xeroBillId) {
                         Log::info('Xero bill created successfully', [
                             'exchange_id' => $exchange->id,
@@ -117,8 +119,8 @@ class CurrencyExchangeService
      */
     public function retryFailedSyncs(): int
     {
-        if (!$this->xeroIntegrationService) {
-            Log::warning('Cannot retry Xero syncs: XeroIntegrationService not available');
+        if (!$this->xeroService) {
+            Log::warning('Cannot retry Xero syncs: XeroService not available');
             return 0;
         }
 
@@ -127,7 +129,7 @@ class CurrencyExchangeService
 
         foreach ($failedExchanges as $exchange) {
             try {
-                $xeroBillId = $this->xeroIntegrationService->createBill($exchange);
+                $xeroBillId = $this->xeroService->createCurrencyExchange($exchange->toArray());
                 if ($xeroBillId) {
                     $successCount++;
                     Log::info('Successfully retried Xero sync', [
@@ -144,5 +146,48 @@ class CurrencyExchangeService
         }
 
         return $successCount;
+    }
+
+    /**
+     * Sync a currency exchange to Xero
+     *
+     * @param array $data The currency exchange data
+     * @return array The response from Xero
+     */
+    public function syncExchangeToXero(array $data): array
+    {
+        try {
+            // Get account mappings
+            $usdBankAccount = AccountMapping::getMapping('currency_exchange', 'usd_bank_account');
+            $copBankAccount = AccountMapping::getMapping('currency_exchange', 'cop_bank_account');
+            $bankFeeAccount = AccountMapping::getMapping('currency_exchange', 'bank_fee_account');
+
+            if (!$usdBankAccount || !$copBankAccount) {
+                throw new \Exception('Required account mappings not found');
+            }
+
+            // Prepare data for Xero
+            $xeroData = [
+                'date' => $data['date'],
+                'usd_amount' => $data['usd_amount'],
+                'cop_amount' => $data['cop_amount'],
+                'bank_fee' => $data['bank_fee'] ?? 0,
+                'bank_name' => $data['bank_name'] ?? 'Currency Exchange',
+                'reference' => $data['reference'] ?? ('FX-' . now()->format('Ymd')),
+                'from_account_code' => $usdBankAccount->xero_account_code,
+                'to_account_code' => $copBankAccount->xero_account_code,
+                'fee_account_code' => $bankFeeAccount ? $bankFeeAccount->xero_account_code : null,
+                'bank_account_code' => $usdBankAccount->xero_account_code, // Using USD account as primary
+            ];
+
+            // Create the transaction in Xero
+            return $this->xeroService->createCurrencyExchange($xeroData);
+        } catch (\Exception $e) {
+            Log::error('Failed to sync currency exchange to Xero', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            throw $e;
+        }
     }
 } 

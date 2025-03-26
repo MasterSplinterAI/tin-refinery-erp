@@ -91,6 +91,46 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/xero/connect', [XeroController::class, 'connect'])->name('xero.connect');
     Route::post('/xero/disconnect', [XeroController::class, 'disconnect'])->name('xero.disconnect');
     Route::get('/xero/test', [XeroController::class, 'testConnection'])->name('xero.test');
+
+    Route::get('/settings/chart-of-accounts', function () {
+        try {
+            $chartOfAccounts = [];
+            $errorMessage = null;
+            
+            try {
+                $chartOfAccounts = app(\App\Services\XeroService::class)->getChartOfAccounts();
+            } catch (\Exception $e) {
+                Log::error('Failed to get chart of accounts from Xero in settings page', [
+                    'error' => $e->getMessage()
+                ]);
+                $errorMessage = 'Failed to fetch accounts from Xero: ' . $e->getMessage();
+            }
+            
+            // Get account mappings and transform them for the frontend
+            $mappings = \App\Domain\Common\Models\AccountMapping::with('module')->get();
+            $mappings = $mappings->map(function ($mapping) {
+                return [
+                    'id' => $mapping->id,
+                    'module' => is_object($mapping->module) ? $mapping->module->name : $mapping->module,
+                    'module_id' => $mapping->module_id,
+                    'transaction_type' => $mapping->transaction_type,
+                    'xero_account_code' => $mapping->xero_account_code,
+                    'xero_account_name' => $mapping->xero_account_name,
+                ];
+            });
+            
+            return Inertia::render('Settings/ChartOfAccounts', [
+                'mappings' => $mappings,
+                'chartOfAccounts' => $chartOfAccounts,
+                'errorMessage' => $errorMessage,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error rendering chart of accounts settings page', [
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->route('dashboard')->with('error', 'Error loading settings: ' . $e->getMessage());
+        }
+    })->name('settings.chart-of-accounts');
 });
 
 // Xero callback route - must be outside auth middleware
@@ -446,3 +486,62 @@ Route::get('/xero/verify-connection', function(Request $request) {
         ], 500, $headers);
     }
 })->name('xero.verify-connection');
+
+// Add a test route for Xero accounts structure
+Route::get('/test-xero-accounts', function () {
+    try {
+        $xeroService = app(\App\Services\XeroService::class);
+        $accounts = $xeroService->getAccounts();
+        
+        // Log and return the structure of the first account
+        if (!empty($accounts['Accounts']) && count($accounts['Accounts']) > 0) {
+            $firstAccount = $accounts['Accounts'][0];
+            Log::info('First Xero account structure:', ['account' => $firstAccount]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully fetched Xero accounts',
+                'account_keys' => array_keys($firstAccount),
+                'first_account' => $firstAccount,
+                'accounts_count' => count($accounts['Accounts']),
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'No accounts found in Xero response',
+            'accounts' => $accounts,
+        ]);
+    } catch (\Exception $e) {
+        Log::error('Failed to test Xero accounts', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false, 
+            'message' => 'Error: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+})->name('test-xero-accounts');
+
+// Debug route to check settings data
+Route::get('/debug-settings-data', function () {
+    try {
+        $chartOfAccounts = app(\App\Services\XeroService::class)->getChartOfAccounts();
+        $mappings = \App\Domain\Common\Models\AccountMapping::all();
+        
+        return response()->json([
+            'chartOfAccounts' => $chartOfAccounts,
+            'mappings' => $mappings,
+            'chartOfAccountsCount' => count($chartOfAccounts),
+            'mappingsCount' => count($mappings)
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});

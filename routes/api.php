@@ -6,6 +6,7 @@ use App\Http\Controllers\BatchController;
 use App\Http\Controllers\ProcessController;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CurrencyExchangeController;
+use App\Domain\Settings\Http\Controllers\SettingsController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -183,4 +184,11 @@ Route::get('/currency-exchanges', [CurrencyExchangeController::class, 'index'])-
 Route::post('/currency-exchanges', [CurrencyExchangeController::class, 'store'])->name('api.currency-exchanges.store');
 Route::post('/currency-exchanges/retry-syncs', [CurrencyExchangeController::class, 'retryFailedSyncs'])->name('api.currency-exchanges.retry-syncs');
 Route::post('/currency-exchanges/{id}/sync-with-xero', [CurrencyExchangeController::class, 'syncWithXero'])->name('api.currency-exchanges.sync-with-xero');
-Route::get('/currency-exchanges/xero-bank-accounts', [CurrencyExchangeController::class, 'getXeroBankAccounts'])->name('api.currency-exchanges.xero-bank-accounts'); 
+Route::get('/currency-exchanges/xero-bank-accounts', [CurrencyExchangeController::class, 'getXeroBankAccounts'])->name('api.currency-exchanges.xero-bank-accounts');
+
+// Settings routes
+Route::prefix('settings')->name('api.settings.')->group(function () {
+    Route::get('/chart-of-accounts', [SettingsController::class, 'getChartOfAccounts'])->name('chart-of-accounts');
+    Route::get('/mappings', [SettingsController::class, 'getMappings'])->name('mappings');
+    Route::post('/mappings', [SettingsController::class, 'updateMapping'])->name('update-mapping');
+}); 
