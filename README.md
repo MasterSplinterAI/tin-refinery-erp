@@ -241,6 +241,13 @@ Key files:
 - Integration with Xero for accounting
 - Syncing of exchange transactions to Xero
 
+### Chart of Accounts Management
+- Map Xero account codes to system modules
+- Flexible account mapping configuration
+- Support for multiple modules (Currency Exchange, Purchase Orders, etc.)
+- Dynamic account code selection in transactions
+- Automatic account code resolution for Xero integration
+
 ### Inventory Management
 - Track tin and slag inventory
 - Monitor Sn content in inventory items
@@ -283,7 +290,7 @@ php artisan key:generate
 ```
 
 5. Configure your database in `.env`:
-```env
+```bash
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -293,7 +300,7 @@ DB_PASSWORD=your_password
 ```
 
 6. Configure Xero API integration in `.env`:
-```env
+```bash
 XERO_CLIENT_ID=your_xero_client_id
 XERO_CLIENT_SECRET=your_xero_client_secret
 XERO_REDIRECT_URI=https://your-ngrok-domain.ngrok-free.app/xero/iframe-callback
@@ -344,6 +351,32 @@ APP_URL=https://your-ngrok-domain.ngrok-free.app
 - Create a new app in the Xero Developer Portal
 - Set the redirect URL to `https://your-ngrok-domain.ngrok-free.app/xero/iframe-callback`
 - Copy the Client ID and Client Secret to your `.env` file
+
+### Xero Account Mapping Setup
+
+1. Navigate to Settings > Chart of Accounts
+2. Select a module (e.g., Currency Exchange)
+3. Configure account mappings:
+   - Map transaction types to Xero account codes
+   - Set default accounts for specific operations
+   - Configure clearing accounts for multi-currency transactions
+
+Example account mappings:
+```json
+{
+  "module": "CurrencyExchange",
+  "mappings": {
+    "BankFees": "800",
+    "Clearing": "850",
+    "USDBank": "1000",
+    "COPBank": "1001"
+  }
+}
+```
+
+4. Save mappings to apply them to future transactions
+5. Existing mappings can be updated at any time
+6. Changes take effect immediately for new transactions
 
 ## Development Workflow
 
@@ -505,6 +538,82 @@ GET /api/inventory
 }
 ```
 
+### Chart of Accounts Management
+
+#### List Modules
+```http
+GET /api/settings/modules
+```
+
+**Response:**
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "name": "CurrencyExchange",
+            "description": "Currency Exchange Module",
+            "mappings": [
+                {
+                    "id": 1,
+                    "mapping_type": "BankFees",
+                    "account_code": "800",
+                    "description": "Bank Fees Account"
+                }
+            ]
+        }
+    ]
+}
+```
+
+#### Get Module Account Mappings
+```http
+GET /api/settings/modules/{id}/mappings
+```
+
+**Response:**
+```json
+{
+    "data": [
+        {
+            "id": 1,
+            "mapping_type": "BankFees",
+            "account_code": "800",
+            "description": "Bank Fees Account"
+        },
+        {
+            "id": 2,
+            "mapping_type": "Clearing",
+            "account_code": "850",
+            "description": "Clearing Account"
+        }
+    ]
+}
+```
+
+#### Update Module Account Mapping
+```http
+PUT /api/settings/modules/{moduleId}/mappings/{mappingId}
+Content-Type: application/json
+
+{
+    "account_code": "801",
+    "description": "Updated Bank Fees Account"
+}
+```
+
+#### Create Module Account Mapping
+```http
+POST /api/settings/modules/{moduleId}/mappings
+Content-Type: application/json
+
+{
+    "mapping_type": "NewMapping",
+    "account_code": "900",
+    "description": "New Account Mapping"
+}
+```
+
 ## Database Schema
 
 ### Batches Table
@@ -552,6 +661,31 @@ CREATE TABLE inventory_items (
     status ENUM('active', 'inactive') NOT NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL
+);
+```
+
+### Modules Table
+```sql
+CREATE TABLE modules (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL
+);
+```
+
+### Account Mappings Table
+```sql
+CREATE TABLE account_mappings (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    module_id BIGINT UNSIGNED NOT NULL,
+    mapping_type VARCHAR(255) NOT NULL,
+    account_code VARCHAR(10) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    FOREIGN KEY (module_id) REFERENCES modules(id)
 );
 ```
 
@@ -651,10 +785,13 @@ server {
 ## Changelog
 
 ### [Unreleased]
-- Implemented Xero API integration for currency exchanges
-- Added multi-currency support
-- Enhanced asset handling for ngrok deployments
-- Improved error handling and logging
+- Added Chart of Accounts management system
+  - Account mapping interface
+  - Module-based account configuration
+  - Dynamic account code resolution
+- Enhanced currency exchange with clearing account support
+- Added COP bank fee handling in Xero sync
+- Improved error handling for Xero transactions
 - Added automatic asset path updates
 - Implemented tenant ID management for Xero API
 - Added dashboard with currency exchange status
