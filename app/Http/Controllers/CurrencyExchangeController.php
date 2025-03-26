@@ -79,23 +79,27 @@ class CurrencyExchangeController extends Controller
             $xeroData = [
                 'usd_amount' => $exchange->usd_amount,
                 'cop_amount' => $exchange->cop_amount,
-                'bank_fee' => $exchange->bank_fee,
-                'date' => $exchange->date->format('Y-m-d'),
+                'bank_fee' => $exchange->bank_fee_usd ?? 0,
+                'bank_fee_cop' => $exchange->bank_fee_cop ?? 0,
+                'date' => $exchange->exchange_date ? $exchange->exchange_date->format('Y-m-d') : now()->format('Y-m-d'),
                 'reference' => 'FX-' . $exchange->id,
                 'bank_name' => $exchange->bank_name,
-                // These account codes should come from config or settings
-                'from_account_code' => config('xero.accounts.usd_bank'),
-                'to_account_code' => config('xero.accounts.cop_bank'),
-                'fee_account_code' => config('xero.accounts.bank_fees'),
-                'bank_account_code' => config('xero.accounts.main_bank')
+                'exchange_rate' => $exchange->exchange_rate,
+                // Account codes from mappings
+                'from_account_code' => $this->getAccountCode('CurrencyExchange', 'UsdAccount') ?? config('xero.accounts.usd_bank'),
+                'to_account_code' => $this->getAccountCode('CurrencyExchange', 'CopAccount') ?? config('xero.accounts.cop_bank'),
+                'fee_account_code' => $this->getAccountCode('CurrencyExchange', 'BankFees') ?? config('xero.accounts.bank_fees'),
+                'clearing_account_code' => $this->getAccountCode('CurrencyExchange', 'Clearing') ?? config('xero.accounts.clearing'),
+                'bank_account_code' => $this->getAccountCode('CurrencyExchange', 'MainAccount') ?? config('xero.accounts.main_bank')
             ];
             
-            // Create the exchange in Xero
-            $result = $xeroService->createCurrencyExchange($xeroData);
+            // Create the exchange in Xero using bank transfer instead of bank transaction
+            $result = $xeroService->createCurrencyExchangeTransfer($xeroData);
             
             // Update the exchange with Xero details
             $exchange->xero_synced = true;
-            $exchange->xero_reference = $result['BankTransactions'][0]['BankTransactionID'] ?? null;
+            $exchange->xero_reference = $result['UsdTransaction']['BankTransactionID'] ?? null;
+            $exchange->xero_bill_id = $result['CopTransaction']['BankTransactionID'] ?? null;
             $exchange->xero_sync_date = now();
             $exchange->save();
             
@@ -194,6 +198,28 @@ class CurrencyExchangeController extends Controller
             return redirect()->back()->with('success', 'Successfully connected to Xero. Found ' . count($currencies['Currencies'] ?? []) . ' currencies.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to connect to Xero: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get account code from mappings
+     * 
+     * @param string $module The module name
+     * @param string $transactionType The transaction type
+     * @return string|null The account code or null if not found
+     */
+    protected function getAccountCode($module, $transactionType)
+    {
+        try {
+            $mapping = \App\Domain\Common\Models\AccountMapping::getMapping($module, $transactionType);
+            return $mapping ? $mapping->xero_account_code : null;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to get account code', [
+                'module' => $module,
+                'transaction_type' => $transactionType,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 } 
